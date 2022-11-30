@@ -67,43 +67,59 @@ def init(self):
             
             self.nick = self.socket.recv(1024).decode
 
+def getPreguntas():
+    archivo = open("preguntas.txt","r")
+    preguntas = []
+    for pregunta in archivo:
+        splitted = pregunta.split(';')
+        preguntas.append(splitted)
+    return preguntas
+
+def getRandoms():
+    preguntas = getPreguntas()
+    preguntasRandom=[]
+    for x in range(0,5):
+        pregunta = random.choice(preguntas)
+        preguntasRandom.append(pregunta)
+        preguntas.remove(pregunta)
+    return preguntasRandom
+
+def checkAnswer(question, answer):
+    splitted = question.split(';')
+    if(splitted[5] == answer):
+        return True
+    else:
+        return False
+
 
 def login(email, password):
-    
     logueado=False
     usuarios=open('./usuarios.txt','r')
     for usuario in usuarios:
         datos=usuario.split(';')
         if datos[0] == email and datos[1].strip() == password:
             logueado=True
+
     usuarios.close()
-
-
     return logueado
+
 def register(email, password):
     existe=False
     
     if (os.path.isfile('./usuarios.txt') == False):
         file = Path('./usuarios.txt')
         file.touch(exist_ok=True)
-    
 
     usuarios = open('./usuarios.txt')
-  
-    
-    for usuario in usuarios:
-        
-        datos=usuario.split(';')
-      
+    for usuario in usuarios:   
+        datos=usuario.split(';') 
         if (datos[0] == email):
             print('El email ya esta siendo utilizado, pruebe con otro')
             existe=True
             usuarios.close()
             sleep(2) 
             break
-       
-
-      
+    
     if existe==False: 
         usuarios = open('./usuarios.txt','a')
         usuarios.write(email+ ';' + password+"\n")
@@ -112,6 +128,13 @@ def register(email, password):
         usuarios.close()
         
     return existe
+
+
+
+
+
+
+
 
 
 
