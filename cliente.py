@@ -48,7 +48,7 @@ def registro():
 salir=False
 logueado=False
 s = socket.socket()
-s.connect('localhost')
+s.connect(('localhost',9004))
 
 while not logueado and not salir:
 
