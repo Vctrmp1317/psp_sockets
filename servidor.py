@@ -20,8 +20,12 @@ class Trivial(Thread):
         # self.preguntas = preguntas  
 
     def run(self):
+        global turno, jugadores, numJugadores, tiempo, jugadoresOrdenados, cadena, listaPreguntas
         self.nick = self.socket.recv(1024).decode()
+        
         print(self.nick,'ha comenzado')
+
+
         #Inicio semafoto
         # semaphore.acquire
 
@@ -52,7 +56,6 @@ def login(email, password):
 
 
     return logueado
-
 def registro(email, password):
     existe=False
     
@@ -60,12 +63,15 @@ def registro(email, password):
         file = Path('./usuarios.txt')
         file.touch(exist_ok=True)
     
-    usuarios = open('./usuarios.txt').readlines()
+
+    usuarios = open('./usuarios.txt')
   
     
     for usuario in usuarios:
+        
         datos=usuario.split(';')
-        if datos[0] == email:
+      
+        if (datos[0] == email):
             print('El email ya esta siendo utilizado, pruebe con otro')
             existe=True
             usuarios.close()
@@ -73,38 +79,20 @@ def registro(email, password):
             break
        
 
-        else:
-            usuarios.write(email+ ';' + password)
-            print('usuario registrado correctamente')
-            existe=False
-            usuarios.close()
+      
+    if existe==False: 
+        usuarios = open('./usuarios.txt','a')
+        usuarios.write(email+ ';' + password+"\n")
+        print('usuario registrado correctamente')
+        existe=False
+        usuarios.close()
         
     return existe
 
 
 
+
+
 if __name__ == "__main__":
-
-    turnos=Semaphore(2)
-    mutex=Lock()
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(("", 9003))
-    server.listen(1)
-
-    while True:
-            socket_cliente, datos_cliente = server.accept()
-            nom=socket_cliente.recv(1024).decode()
-
-            print("Conectado " +str(datos_cliente))
-
-            choice = random.choice(preguntas).split("\n")
-            lista = []
-            for x in choice:
-                pregunta = x.split(";")
-            for x in pregunta:
-                lista.append(x)
-
-            hilo = Trivial(socket_cliente, datos_cliente,lista)
-            hilo.start()
-    
+   print(login('antonio','1234'))
     
