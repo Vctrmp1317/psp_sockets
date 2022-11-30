@@ -1,21 +1,44 @@
-from threading import Thread
+from threading import Thread, Semaphore, Lock
 import socket
 import random
 import operator
 import os, os.path
 from pathlib import Path
 from time import sleep 
+preguntas = open("preguntas.txt", "r", encoding="utf8").readlines()
+
+players={}
 
 class Trivial(Thread): 
-    def __init__(self,socket_cliente, datos_cliente, preguntas): 
+    def __init__(self,socket_cliente, datos_cliente,pregunta): 
         Thread.__init__(self)
         self.socket = socket_cliente
         self.datos= datos_cliente
-        self.email = ''
-        self.nombre= ''
+        self.nick = ''
+        self.pregunta = pregunta;
         self.logueado = False
-        self.aciertos = 0
-        self.preguntas = preguntas  
+        # self.preguntas = preguntas  
+
+    def run(self):
+        self.nick = self.socket.recv(1024).decode()
+        print(self.nick,'ha comenzado')
+        #Inicio semafoto
+        # semaphore.acquire
+
+
+        choice = random.choice(preguntas).split("\n")
+        lista = []
+        for x in choice:
+            pregunta = x.split(";")
+        for x in pregunta:
+            lista.append(x)
+            print(x)
+            # self.socket.send(x.encode())
+        
+        #Fin semaforo
+        # semaphore.release
+    
+    
 
 def login(email, password):
     
@@ -58,5 +81,30 @@ def registro(email, password):
         
     return existe
 
-print(registro('juanito','1234'))
+
+
+if __name__ == "__main__":
+
+    turnos=Semaphore(2)
+    mutex=Lock()
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind(("", 9003))
+    server.listen(1)
+
+    while True:
+            socket_cliente, datos_cliente = server.accept()
+            nom=socket_cliente.recv(1024).decode()
+
+            print("Conectado " +str(datos_cliente))
+
+            choice = random.choice(preguntas).split("\n")
+            lista = []
+            for x in choice:
+                pregunta = x.split(";")
+            for x in pregunta:
+                lista.append(x)
+
+            hilo = Trivial(socket_cliente, datos_cliente,lista)
+            hilo.start()
+    
     
