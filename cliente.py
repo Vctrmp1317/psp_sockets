@@ -59,7 +59,7 @@ s.close()
 #     # Contador de las preguntas para no hacer mas de 5
 #     contPregun+=1
     
-#     print('PREGUNTA '+str(1+contPregun)+'!')
+#     print('PREGUNTA '+str(contPregun)+'!')
     
 #     # Falta como va ha recibir los datos y como los va a seleccionar
 #     op = input ('Elija la respuesta correcta.(a,b,c,d)')
