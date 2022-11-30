@@ -28,7 +28,7 @@ def login(email, password):
     usuarios.close()
 
 
-    return logueado()
+    return logueado
 
 def registro(email, password):
     existe=False
@@ -37,7 +37,8 @@ def registro(email, password):
         file = Path('./usuarios.txt')
         file.touch(exist_ok=True)
     
-    usuarios = open('./usuarios.txt')
+    usuarios = open('./usuarios.txt').readlines()
+  
     
     for usuario in usuarios:
         datos=usuario.split(';')
@@ -47,16 +48,15 @@ def registro(email, password):
             usuarios.close()
             sleep(2) 
             break
-        else:
-            existe=False
+       
 
-        if(existe==False):
-            usuarios.write(email+ ';' + password+ "\n")
+        else:
+            usuarios.write(email+ ';' + password)
             print('usuario registrado correctamente')
             existe=False
             usuarios.close()
-            
+        
     return existe
 
-    
+print(registro('juanito','1234'))
     
