@@ -63,9 +63,13 @@ while not logueado and not salir:
     elif  op == 2:
         registro()
     elif  op == 3:
+        salir=True
         print('Saliendo...')
+        sleep(2)
         os.system('cls')
-    
+
+nickname = input('Introduce tu nickname: >>>')
+s.send(nickname.encode())
 
 # correo = input('Introduce el correo electronico')
 # s.send(correo.encode())
