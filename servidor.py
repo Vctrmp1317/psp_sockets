@@ -11,20 +11,31 @@ players={}
 
 #pregunta
 class Trivial(Thread): 
-    def __init__(self,socket_cliente, user_data): 
+    def __init__(self,socket_cliente, user_data) ->None: 
         Thread.__init__(self)
         self.socket = socket_cliente
-        self.user= user_data
-        self.email=''
-        self.nick = ''
-       # self.pregunta = pregunta;
-        self.loged = False
-        # self.preguntas = preguntas  
+        self.datos = datos_cliente
+        self.trivial = list()
+        self.nombre = ""
+        self.logged = False
 
     def run(self):
-        global turno, jugadores, numJugadores, tiempo, jugadoresOrdenados, cadena, listaPreguntas 
-       
-        init(self)
+       global sem, mutex, nClientes, contSem, enCurso, cad, trivial
+       while(self.logged == False):
+           datosLogin = self.socket.recv(1024).decode().split(";")
+           if (datosLogin[0] == "reg"):
+               if(login(datosLogin[1], datosLogin[2])):
+                   self.socket.send("True".encode())
+               else:
+                   self.socket.send("False".encode())
+           elif (datosLogin[0] == "log"):
+               if(register(datosLogin[1], datosLogin[2])):
+                   self.socket.send("True".encode())
+                   self.logged = True
+               else:
+                   self.socket.send("False".encode())
+           else:
+               self.socket.send("False".encode())
 
 
 
@@ -45,27 +56,7 @@ class Trivial(Thread):
         #Fin semaforo
         # semaphore.release
     
-    
-def init(self):
-    while self.loged == False:
-            user = self.socket.recv(1024).decode.split(";")
 
-            if(user[0]=='login'):
-                if(login(user[1],user[2])):
-                    self.socket.send("True".encode())
-                    self.email=user[1]
-                    self.loged = True
-                else:
-                    self.socket.send("False".encode())
-            elif(user[0]=='register'):
-                if (register(user[1],user[2])):
-                    self.socket.send("True".encode())
-                else:
-                    self.socket.send("False".encode())
-            else:
-                    self.socket.send("False".encode())
-            
-            self.nick = self.socket.recv(1024).decode
 
 def getPreguntas():
     archivo = open("preguntas.txt","r")
@@ -98,15 +89,14 @@ def login(email, password):
     for usuario in usuarios:
         datos=usuario.split(';')
         if datos[0] == email and datos[1].strip() == password:
+            print(datos[0] + "_--_" + datos[1])
             logueado=True
-
     usuarios.close()
     return logueado
 
 def register(email, password):
     existe=False
-    
-    if (os.path.isfile('./usuarios.txt') == False):
+    if (os.path.exists('./usuarios.txt') == False):
         file = Path('./usuarios.txt')
         file.touch(exist_ok=True)
 
@@ -135,6 +125,12 @@ def register(email, password):
 
 
 
+
+turno = Semaphore(2)
+mutex = Lock()
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind(("",9004))
+server.listen(1)
 
 
 

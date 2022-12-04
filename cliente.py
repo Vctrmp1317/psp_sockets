@@ -9,31 +9,30 @@ def comprobarEmail(email):
     return re.match(expresion_regular, email)
 
 def login():
-    global salir, logueado, server
-
+    global salir, logueado, s
     email = input('---Login---\nEmail: ')
     password = input('Password: ')
 
-    server.send(('login;' + email + ';' + password).encode())
+    s.send(('login;' + email + ';' + password).encode())
 
-    respuesta = server.recv(1024).decode()
+    respuesta = s.recv(1024).decode()
 
-    if respuesta == 'True':
+    if (respuesta == 'True'):
         print('Logueado con éxito')
         logueado = True
     else:
         print('Email o contraseña incorrecta')
 
 def registro():
-    global salir, registrado, server
+    global salir, registrado, s
 
     email = input('---Registro---\nEmail: ')
     password = input('Password: ')
 
    
     if comprobarEmail(email):
-        server.send(('registro;' + email + ';' + password).encode())
-        respuesta = server.recv(1024).decode()
+        s.send(('registro;' + email + ';' + password).encode())
+        respuesta = s.recv(1024).decode()
         if respuesta == 'False':
             print('Usuario registrado con exito')
             registrado=True
@@ -48,21 +47,20 @@ def registro():
 salir=False
 logueado=False
 s = socket.socket()
-s.connect(('localhost',9004))
+s.connect(('localhost',9999))
 
 while not logueado and not salir:
-
     print('---MENU---')
     print('1 - Login')
     print('2 - Registro')
     print('3 -Salir')
-    op= input('Introduce una opcion')
+    op = input('Introduce una opcion ')
 
-    if op == 1:
+    if op == "1":
         login()
-    elif  op == 2:
+    elif  op == "2":
         registro()
-    elif  op == 3:
+    elif  op == "3":
         salir=True
         print('Saliendo...')
         sleep(2)
@@ -70,6 +68,32 @@ while not logueado and not salir:
 
 nickname = input('Introduce tu nickname: >>>')
 s.send(nickname.encode())
+
+
+while not salir:
+    enunciado = s.recv(1024).decode().split(';')
+
+    if enunciado[0] == 'P':
+        print(enunciado[1])
+    # Contesta y envia la respuesta
+        respuesta = input("Respuesta >> ")
+    # Se envía la respuesta al servidor
+        s.send(respuesta.upper().encode())
+    # Comprueba acierto
+        acierto = s.recv(1024).decode()
+        print(acierto)
+        sleep(1)
+        os.system('cls')
+    elif enunciado[0] == 'FT':
+        print(enunciado[1])
+    elif enunciado[0] == 'FP':
+        print(enunciado[1])
+        salir = True
+        break
+
+s.close()
+
+    
 
 # correo = input('Introduce el correo electronico')
 # s.send(correo.encode())
