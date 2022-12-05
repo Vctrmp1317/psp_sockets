@@ -107,6 +107,9 @@ class Trivial(Thread):
 
         turno.release()
 
+        print('Puntuacion ')
+        self.socket.send(str('Mostrar toda las puntaciones\n'+mostrarPuntos()).encode)
+
         self.socket.close()
 
     
@@ -143,6 +146,11 @@ def checkAnswer(question, answer):
     else:
         return False
 
+def mostrarPuntos():
+    with open('clasificacion.txt', 'r') as archivo:
+        for jugador in archivo:
+            cadena += str(jugador[1][0]) + ' ' + str(jugador[1][1]) + "\n"
+    return cadena
 
 def login(email, password):
     logueado=False
