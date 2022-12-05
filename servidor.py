@@ -1,7 +1,6 @@
 from threading import Thread, Semaphore, Lock
 import socket
 import random
-import operator
 import os, os.path
 from pathlib import Path
 from time import sleep 
@@ -11,52 +10,114 @@ players={}
 
 #pregunta
 class Trivial(Thread): 
-    def __init__(self,socket_cliente, user_data) ->None: 
+    def __init__(self,socket_cliente, user_data,preguntas): 
         Thread.__init__(self)
         self.socket = socket_cliente
-        self.datos = datos_cliente
-        self.trivial = list()
-        self.nombre = ""
-        self.logged = False
-
+        self.user= user_data
+        self.email=''
+        self.nick = ''
+        self.loged = False
+        self.preguntas = preguntas  
+        self.aciertos = 0
+       
     def run(self):
-       global sem, mutex, nClientes, contSem, enCurso, cad, trivial
-       while(self.logged == False):
-           datosLogin = self.socket.recv(1024).decode().split(";")
-           if (datosLogin[0] == "reg"):
-               if(login(datosLogin[1], datosLogin[2])):
-                   self.socket.send("True".encode())
-               else:
-                   self.socket.send("False".encode())
-           elif (datosLogin[0] == "log"):
-               if(register(datosLogin[1], datosLogin[2])):
-                   self.socket.send("True".encode())
-                   self.logged = True
-               else:
-                   self.socket.send("False".encode())
-           else:
-               self.socket.send("False".encode())
+        global turno, jugadores, numJugadores, tiempo, jugadoresOrdenados, cadena, listaPreguntas
+        while self.loged == False:
 
+                user = self.socket.recv(1024).decode().split(";")
+                if(user[0]=='login'):
+                    if(login(user[1],user[2])):
+                        self.socket.send("True".encode())
+                        self.email=user[1]
+                        self.loged = True
+                    else:
+                        self.socket.send("False".encode())
 
+                elif(user[0]=='register'):
+                    if (register(user[1],user[2])):
+                        self.socket.send("True".encode())
+                    else:
+                        self.socket.send("False".encode())
+                else:
+                        self.socket.send("False".encode())
+                
 
+        nick = self.nick = self.socket.recv(1024).decode()
 
-        #Inicio semafoto
-        # semaphore.acquire
+        print(nick + " se ha conectado")
 
+        turno.acquire
 
-        # choice = random.choice(preguntas).split("\n")
-        # lista = []
-        # for x in choice:
-        #     pregunta = x.split(";")
-        # for x in pregunta:
-        #     lista.append(x)
-        #     print(x)
-            # self.socket.send(x.encode())
+        numJugadores = numJugadores + 1
+        print(numJugadores)
+
+        while numJugadores != 2:
+            pass
+
+        print("Comenzamos!!")
+
+        for pregunta in self.preguntas:
+                
+            self.socket.send(str('P;' + (pregunta[0] + '\n' + pregunta[1] + '\n' + pregunta[2] + '\n' + pregunta[3]+ '\n' + pregunta[4])).encode())
+            
+            playerR = self.socket.recv(1024).decode()
+            if checkAnswer(pregunta[5], playerR):
+                self.socket.send('Acierto'.encode())   
+                self.aciertos += 1
+                print(self.nick + " acerto")
+            else:
+                self.socket.send('Fallo'.encode())  
+                print(self.nick +" fallo")
         
-        #Fin semaforo
-        # semaphore.release
-    
+        self.socket.send(str('FT;>>> Puntuación: ' + str(self.aciertos) + ' pts\nEsperando a que acaben el resto de jugadores...').encode())
 
+        listaJugadores.__setitem__(self.email,self.aciertos)
+
+        numJugadores = numJugadores - 1
+
+        if numJugadores == 0:
+            mutex.acquire()
+
+            dicc = getDicc()
+            mutex.acquire
+            for jugador in listaJugadores:
+                if(jugador in dicc.keys()):
+                    new = int((dicc[jugador]))
+                    new += self.aciertos
+                    dicc.update({jugador : new})
+                else:
+                    dicc.__setitem__(self.email,self.aciertos)
+            
+
+            file = open("./clasificacion.txt", "w")
+            for key, value in dicc.items():
+                jugador = str(key) + ";" + str(value)
+                file.write(str(jugador) + "\n")
+            file.close
+                
+            mutex.release()
+
+        while numJugadores != 0:
+            pass
+
+        sleep(2)
+
+        print('Finalizado ')
+        self.socket.send(str('FP;\n>>> Fin de la partida <<<\n').encode())
+
+        turno.release()
+
+        self.socket.close()
+
+    
+def getDicc():
+    with open('clasificacion.txt', 'r') as archivo:
+        data = {}
+        for linea in archivo:
+            key, value = linea.split(';')
+            data[key.strip()] = value.strip()
+
+        return data
 
 def getPreguntas():
     archivo = open("preguntas.txt","r")
@@ -76,8 +137,8 @@ def getRandoms():
     return preguntasRandom
 
 def checkAnswer(question, answer):
-    splitted = question.split(';')
-    if(splitted[5] == answer):
+    print("->" + question + "---" + answer)
+    if(question == answer+"\n"):
         return True
     else:
         return False
@@ -89,14 +150,15 @@ def login(email, password):
     for usuario in usuarios:
         datos=usuario.split(';')
         if datos[0] == email and datos[1].strip() == password:
-            print(datos[0] + "_--_" + datos[1])
             logueado=True
+
     usuarios.close()
     return logueado
 
 def register(email, password):
     existe=False
-    if (os.path.exists('./usuarios.txt') == False):
+    
+    if (os.path.isfile('./usuarios.txt') == False):
         file = Path('./usuarios.txt')
         file.touch(exist_ok=True)
 
@@ -126,23 +188,20 @@ def register(email, password):
 
 
 
-turno = Semaphore(2)
-mutex = Lock()
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(("",9004))
-server.listen(1)
-
-
-
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(("",9004))
-server.listen(1 )
-
-
 
 if __name__ == "__main__":
+    listaPreguntas = getRandoms()
+    numJugadores = 0
+    listaJugadores = {}
+    turno = Semaphore(2)
+    mutex = Lock()
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind(("localhost",9004))
+    server.listen(1)
+    
     print("Iniciando Juego")
-    socket_cliente, datos_cliente = server.accept()
-    jugador = Trivial(socket_cliente, datos_cliente)
-    jugador.start()
+    while True:
+        socket_cliente, datos_cliente = server.accept()
+        jugador = Trivial(socket_cliente, datos_cliente,listaPreguntas)
+        jugador.start()
     
