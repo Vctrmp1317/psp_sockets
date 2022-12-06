@@ -1,2 +1,0 @@
-admin;1234
-paco@gmail.com;1234
