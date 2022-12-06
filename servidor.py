@@ -51,7 +51,7 @@ class Trivial(Thread):
         numJugadores = numJugadores + 1
         print(numJugadores)
 
-        while numJugadores != 2:
+        while numJugadores != 1:
             pass
 
         print("Comenzamos!!")
@@ -97,7 +97,7 @@ class Trivial(Thread):
                 
             mutex.release()
 
-        while numJugadores != 0:
+        while numJugadores != 1:
             pass
 
         sleep(2)
@@ -108,7 +108,10 @@ class Trivial(Thread):
         turno.release()
 
         print('Puntuacion ')
-        self.socket.send(str('Mostrar toda las puntaciones\n'+mostrarPuntos()).encode)
+        self.socket.send(str('Mostrar toda las puntaciones\n').encode)
+        for jugador in listaJugadores:
+             self.socket.send(str(self.email,self.aciertos).encode)
+       
 
         self.socket.close()
 
@@ -149,8 +152,9 @@ def checkAnswer(question, answer):
 def mostrarPuntos():
     with open('clasificacion.txt', 'r') as archivo:
         for jugador in archivo:
-            cadena += str(jugador[1][0]) + ' ' + str(jugador[1][1]) + "\n"
-    return cadena
+            puntacion += jugador.split('\n')
+            preguntas.append(puntacion)
+
 
 def login(email, password):
     logueado=False

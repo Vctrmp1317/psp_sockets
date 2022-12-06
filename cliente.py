@@ -88,3 +88,7 @@ while not salir:
         print(enunciado[1])
         salir = True
         break
+
+puntiacion = s.recv(1024).decode().split(';')
+
+s.close()
